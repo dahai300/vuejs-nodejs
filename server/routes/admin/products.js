@@ -37,7 +37,7 @@ const upload=multer({
 
 //router.post('/uploadproduct',checkauth, ProductsController.product_upload);
 
-router.post('/product',upload,ProductsController.product_add);
+router.post('/product',checkauth,upload,ProductsController.product_add);
 router.get('/product', checkauth,ProductsController.product_get);
 
 module.exports = router;
