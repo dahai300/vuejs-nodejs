@@ -1,36 +1,15 @@
 const mongoose = require('mongoose');
 const Products = require('../../models/admin/products');
 
-exports.product_upload= (req,res,next) => {
-  if (!req.files)
-     return;
-  //console.log(req.files)
-   // The name of the input field (i.e. "sampleFile") is used to retrieve the uploaded file
-   let sampleFile = req.files.file;
-   let fileName=sampleFile.name;
-   // Use the mv() method to place the file somewhere on your server
-   sampleFile.mv('public/uploads/'+fileName, function(err) {
-     if (err){
-       return res.status(500).json({
-         code:0,
-         error:err
-       });
-     }
-     res.status(200).json({
-         code: 1,
-         message: '操作成功'
-     });
-   })
-}
 
 exports.product_add = (req, res, next) => {
 
      var products = new Products({
          _id: new mongoose.Types.ObjectId(),
          title: req.body.title,
-         image:req.body.image,
+         image:req.file.filename,
          content: req.body.content,
-         publishDate: req.body.publishdate,
+         publishDate: req.body.publishDate,
      });
      products.save().then(() => {
          res.status(200).json({

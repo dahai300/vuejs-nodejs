@@ -5,17 +5,9 @@
 			  <el-form-item label="标题" prop="title">
 			    <el-input v-model="ruleForm.title"></el-input>
 			  </el-form-item>
-			  <el-form-item label="图片" prop="fileList">
-			    <el-upload
-				  class="upload-demo"
-				  :action="uploadUrl"
-				  :on-preview="handlePreview"
-				  :on-progress="onProgress"
-				  :on-change="onChange"
-				  :file-list="fileList">
-				  <el-button size="small" type="primary">点击上传</el-button>
-				  <div slot="tip" class="el-upload__tip" style="margin-top:0">只能上传jpg/png文件，且不超过500kb</div>
-				</el-upload>
+			  <el-form-item label="图片">
+			    <input type="file"  accept="image/*" @change="uploadImage">
+				
 			  </el-form-item>
 			  <el-form-item label="发布日期" prop="publishdate">
 			    <el-date-picker
@@ -45,10 +37,9 @@
 		data(){
 			return{
 				uploadUrl:SERVER_API_URL+'/admin/uploadproduct',
-				fileList:[],
+				selectedImage:null,
 				ruleForm:{
 					title:'',
-					image:'',
 					publishdate:new Date(),
 					content: '' 
 				},
@@ -66,59 +57,60 @@
 			}
 		},
 		methods:{
-			handlePreview(file) {
-		        console.log(file);
-		    },
-		    onProgress(file){
-		    	console.log("progress:")
-		    	console.log(file)
-		    },
-		    onChange(file){
-		    	console.log(file);
-		    	var fileName=file.name;
-		    	this.fileList[0]={
-		    		name:fileName
-		    	};
-		    },
-			submitForm(formName) {
-			 	var url=`${SERVER_API_URL}/admin/product`;
-			 	var _this=this;
-			 	console.log(_this.fileList)
-		        _this.$refs[formName].validate((valid) => {
-		          if (valid) {
-		          	_this.ruleForm.image=_this.fileList[0].name;
-		          	console.log(_this.ruleForm)
-		            axios.post(url,_this.ruleForm).then((res)=>{
-		            	console.log(res)
-		            	if(res.data.code===1){
-		            		_this.$message({
-					          message: '操作成功',
-					          type: 'success'
-					        });
+			uploadImage(event){
+				//console.log(event);
+				this.selectedImage=event.target.files[0];
+				//console.log(this.selectedImage)
+			},
+			submitForm(formName){
+				var url=`${SERVER_API_URL}/admin/product`;
+				let allowTypes=["image/jpeg","image/png"];
+				let maxSize=1000000;
+				if(!this.selectedImage){
+					this.$message.error('请选择图片');
+					return;
+				}
+				if(!allowTypes.includes(this.selectedImage.type) || this.selectedImage.size>maxSize){
+					this.$message.error('只支持jpg,png，大小不超过100k图片');
+					return;
+				}
 
-					       //reset form
-					       _this.fileList=[];
-					       _this.ruleForm={
-					       	title:'',
-							image:'',
-							publishdate:new Date(),
-							content: '' 
-					       }
-		            	}
-		            });
-		            //refresh post token
-					api.tokenRequest().then((res)=>{
-						_this.$store.commit('REFRESH_TOKEN',{
-							token:res.data.token
+				var _this=this;
+				_this.$refs[formName].validate((valid)=>{
+					if(valid){
+
+
+						var formData=new FormData();
+						formData.append('image',this.selectedImage);
+						formData.append('title',this.ruleForm.title);
+						formData.append('publishDate',this.ruleForm.publishdate);
+						formData.append('content',this.ruleForm.content)
+						let config = {
+					      header : {
+					        'Content-Type': 'multipart/form-data'
+					      }
+					    }
+					    
+						axios.post(url,formData,config).then((res)=>{
+							//console.log(res);
+							if(res.data.code===1){
+								_this.$message({
+						          message: '操作成功',
+						          type: 'success'
+						        });
+
+						       _this.ruleForm={
+						       	title:'',
+								publishdate:new Date(),
+								content: '' 
+						       }	
+							}
 						});
-					});
 
-		          } else {
-		            console.log('error submit!!');
-		            return false;
-		          }
-		        });
-		      }
+					}
+				})
+				
+			}
 		},
 		components:{
 			VueEditor
