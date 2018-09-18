@@ -1,28 +1,44 @@
 const mongoose = require('mongoose');
 const Products = require('../../models/admin/products');
+const path=require('path');
 
+const sharp = require('sharp');
 
 exports.product_add = (req, res, next) => {
+    console.log(req.file);
+    const IMAGE_SIZE=600;
+    let getExtName=path.extname(req.file.originalname);
+    let cropFIle=`${req.file.path}_${IMAGE_SIZE}${getExtName}`;
+    sharp(req.file.path)
+      .withMetadata()
+      .resize(IMAGE_SIZE)
+      .toFile(cropFIle, (err, info) => {
+        if(err){
+          console.log(err);
+          return;
+        }
+        var products = new Products({
+            _id: new mongoose.Types.ObjectId(),
+            title: req.body.title,
+            image:req.file.filename,
+            content: req.body.content,
+            publishDate: req.body.publishDate
+        });
+        products.save().then(() => {
+            res.status(200).json({
+                code: 1,
+                message: '操作成功'
+            })
+        }, (err) => {
+            res.status(500).json({
+                code: 0,
+                message: '操作失败',
+                error: err
+            })
+        });
+      });
 
-     var products = new Products({
-         _id: new mongoose.Types.ObjectId(),
-         title: req.body.title,
-         image:req.file.filename,
-         content: req.body.content,
-         publishDate: req.body.publishDate,
-     });
-     products.save().then(() => {
-         res.status(200).json({
-             code: 1,
-             message: '操作成功'
-         })
-     }, (err) => {
-         res.status(500).json({
-             code: 0,
-             message: '操作失败',
-             error: err
-         })
-     });
+
 
 }
 exports.product_get = function (req, res, next) {

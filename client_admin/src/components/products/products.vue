@@ -65,6 +65,13 @@
 			},
 			del(){
 				
+			},
+			handleCropImage(name){
+				let nameArr=name.split(".");
+				let nameArrLen=nameArr.length;
+				let extName=nameArr[nameArrLen-1];
+				let width=400;
+				return `${name}_${width}.${extName}`;
 			}
 		},
 		filters:{
